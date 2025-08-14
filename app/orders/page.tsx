@@ -6,18 +6,30 @@ import Header from "@/components/header";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { supabase, type Order } from "@/lib/supabase";
 import Link from "next/link";
 import Nav from "@/components/navbar";
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<(Order & { company_name: string; user_name: string })[]>([]);
+  const [orders, setOrders] = useState<
+    (Order & { company_name: string; user_name: string })[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<"recent" | "client" | "oldest">("recent");
-  const [userRole] = useState<"Owner" | "SuperClient" | "Client" | "Tenant">("Owner");
+  const [sortBy, setSortBy] = useState<"recent" | "client" | "oldest">(
+    "recent"
+  );
+  const [userRole] = useState<"Owner" | "SuperClient" | "Client" | "Tenant">(
+    "Owner"
+  );
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -25,35 +37,35 @@ export default function OrdersPage() {
     router.push("/");
   };
 
+  const handleNewOrder = () => {
+    router.push("/orders/new");
+  };
+
   useEffect(() => {
     fetchOrders();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, sortBy]);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
 
-      // base select with related names
-      let query = supabase
-        .from("orders")
-        .select(
-          `
+      let query = supabase.from("orders").select(
+        `
           id, order_number, user_id, company_id, building_id, status, total_amount, notes, created_at, updated_at,
           user:users ( id, name, first_name, last_name ),
           company:companies ( id, name )
         `
-        );
+      );
 
-      // search on order_number (fast, server-side).
-      // If you also want to search company/user names, do it client-side after fetch or add text search on a materialized view.
       if (searchTerm.trim()) {
         query = query.or(`order_number.ilike.%${searchTerm}%`);
       }
 
       // sorting
       if (sortBy === "client") {
-        query = query.order("name", { foreignTable: "companies", ascending: true }).order("updated_at", { ascending: false });
+        query = query
+          .order("name", { foreignTable: "companies", ascending: true })
+          .order("updated_at", { ascending: false });
       } else if (sortBy === "oldest") {
         query = query.order("updated_at", { ascending: true });
       } else {
@@ -101,16 +113,25 @@ export default function OrdersPage() {
       CANCELLED: { label: "Cancelled", className: "bg-red-500 text-white" },
     } as const;
 
-    const config = (statusConfig as any)[status] || { label: status, className: "bg-gray-500 text-white" };
+    const config = (statusConfig as any)[status] || {
+      label: status,
+      className: "bg-gray-500 text-white",
+    };
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "2-digit" });
+    return date.toLocaleDateString("en-US", {
+      month: "numeric",
+      day: "numeric",
+      year: "2-digit",
+    });
   };
 
-  const groupOrdersByCompany = (data: (Order & { company_name: string; user_name: string })[]) =>
+  const groupOrdersByCompany = (
+    data: (Order & { company_name: string; user_name: string })[]
+  ) =>
     data.reduce((acc, o) => {
       (acc[o.company_name] ||= []).push(o);
       return acc;
@@ -128,7 +149,11 @@ export default function OrdersPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header userRole={userRole} userName={userRole === "Owner" ? "RANDY" : "Paramount"} onLogout={handleLogout} />
+      <Header
+        userRole={userRole}
+        userName={userRole === "Owner" ? "RANDY" : "Paramount"}
+        onLogout={handleLogout}
+      />
 
       <Nav userRole={userRole} />
 
@@ -136,9 +161,14 @@ export default function OrdersPage() {
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">Orders ({orders.length})</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Orders ({orders.length})
+              </h1>
               <div className="flex items-center space-x-4">
-                <Button className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50">
+                <Button
+                  className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  onClick={handleNewOrder}
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   New Order
                 </Button>
@@ -173,7 +203,9 @@ export default function OrdersPage() {
               ? Object.entries(grouped).map(([companyName, companyOrders]) => (
                   <div key={companyName}>
                     <div className="px-6 py-4 bg-gray-100">
-                      <h2 className="text-lg font-bold text-gray-900">{companyName}</h2>
+                      <h2 className="text-lg font-bold text-gray-900">
+                        {companyName}
+                      </h2>
                     </div>
                     {companyOrders.map((order) => (
                       <Link
@@ -183,21 +215,35 @@ export default function OrdersPage() {
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-6">
-                            <div className="text-sm text-gray-600 w-16">{formatDate(order.created_at)}</div>
+                            <div className="text-sm text-gray-600 w-16">
+                              {formatDate(order.created_at)}
+                            </div>
                             <div className="flex-1">
-                              <div className="text-lg font-semibold text-gray-900 mb-1">{order.order_number}</div>
-                              <div className="text-sm text-gray-600">
-                                {order.building_id ? "50 Beale Street" : "7thFloor- One Market Plaza"}
+                              <div className="text-lg font-semibold text-gray-900 mb-1">
+                                {order.order_number}
                               </div>
-                              <div className="text-sm text-gray-600">{companyName}</div>
+                              <div className="text-sm text-gray-600">
+                                {order.building_id
+                                  ? "50 Beale Street"
+                                  : "7thFloor- One Market Plaza"}
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                {companyName}
+                              </div>
                             </div>
                           </div>
                           <div className="flex items-center space-x-6">
                             <div className="text-right">
-                              <div className="text-sm text-gray-600">Ordered by {order.user_name}</div>
-                              <div className="text-sm text-blue-600 underline">{order.user_name}@paramountgroup.com</div>
+                              <div className="text-sm text-gray-600">
+                                Ordered by {order.user_name}
+                              </div>
+                              <div className="text-sm text-blue-600 underline">
+                                {order.user_name}@paramountgroup.com
+                              </div>
                             </div>
-                            <div className="flex flex-col items-center space-y-2">{getStatusBadge(order.status)}</div>
+                            <div className="flex flex-col items-center space-y-2">
+                              {getStatusBadge(order.status)}
+                            </div>
                             <Button
                               variant="outline"
                               size="sm"
@@ -205,7 +251,10 @@ export default function OrdersPage() {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                console.log("Duplicate order:", order.order_number);
+                                console.log(
+                                  "Duplicate order:",
+                                  order.order_number
+                                );
                               }}
                             >
                               Duplicate order
@@ -224,21 +273,35 @@ export default function OrdersPage() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-6">
-                        <div className="text-sm text-gray-600 w-16">{formatDate(order.created_at)}</div>
+                        <div className="text-sm text-gray-600 w-16">
+                          {formatDate(order.created_at)}
+                        </div>
                         <div className="flex-1">
-                          <div className="text-lg font-semibold text-gray-900 mb-1">{order.order_number}</div>
-                          <div className="text-sm text-gray-600">
-                            {order.building_id ? "50 Beale Street" : "7thFloor- One Market Plaza"}
+                          <div className="text-lg font-semibold text-gray-900 mb-1">
+                            {order.order_number}
                           </div>
-                          <div className="text-sm text-gray-600">{order.company_name}</div>
+                          <div className="text-sm text-gray-600">
+                            {order.building_id
+                              ? "50 Beale Street"
+                              : "7thFloor- One Market Plaza"}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {order.company_name}
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-6">
                         <div className="text-right">
-                          <div className="text-sm text-gray-600">Ordered by {order.user_name}</div>
-                          <div className="text-sm text-blue-600 underline">{order.user_name}@paramountgroup.com</div>
+                          <div className="text-sm text-gray-600">
+                            Ordered by {order.user_name}
+                          </div>
+                          <div className="text-sm text-blue-600 underline">
+                            {order.user_name}@paramountgroup.com
+                          </div>
                         </div>
-                        <div className="flex flex-col items-center space-y-2">{getStatusBadge(order.status)}</div>
+                        <div className="flex flex-col items-center space-y-2">
+                          {getStatusBadge(order.status)}
+                        </div>
                         <Button
                           variant="outline"
                           size="sm"

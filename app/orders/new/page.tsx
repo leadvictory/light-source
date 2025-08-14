@@ -1,20 +1,34 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { ChevronDown, Bell, Minus, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { mockProducts, type Product, type ProductAssignment } from "@/lib/supabase"
-import Link from "next/link"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ChevronDown, Bell, Minus, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  mockProducts,
+  type Product,
+  type ProductAssignment,
+} from "@/lib/supabase";
+import Link from "next/link";
+import Nav from "@/components/navbar";
+import Header from "@/components/header";
+import { supabase } from "@/lib/supabase";
 
 interface CartItem {
-  product: Product & { assignments: ProductAssignment[] }
-  quantity: number
-  unitPrice: number
-  totalPrice: number
+  product: Product & { assignments: ProductAssignment[] };
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
 }
 
 export default function NewOrderPage() {
@@ -38,107 +52,94 @@ export default function NewOrderPage() {
     specialInstructions: "",
     comments: "",
     shippingDetails: "",
-  })
+  });
+  const [userRole] = useState<"Owner" | "SuperClient" | "Client" | "Tenant">(
+    "Owner"
+  );
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [availableProducts] = useState(
+    mockProducts.filter((p) => p.assignments.length > 0)
+  );
 
-  const [cart, setCart] = useState<CartItem[]>([])
-  const [availableProducts] = useState(mockProducts.filter((p) => p.assignments.length > 0))
-
-  const addToCart = (product: Product & { assignments: ProductAssignment[] }) => {
-    const assignment = product.assignments[0] // Use first assignment for pricing
+  const addToCart = (
+    product: Product & { assignments: ProductAssignment[] }
+  ) => {
+    const assignment = product.assignments[0]; // Use first assignment for pricing
     const newItem: CartItem = {
       product,
       quantity: 1,
       unitPrice: assignment.client_unit_price || product.base_unit_price || 0,
       totalPrice: assignment.client_unit_price || product.base_unit_price || 0,
-    }
+    };
 
     setCart((prev) => {
-      const existingItem = prev.find((item) => item.product.id === product.id)
+      const existingItem = prev.find((item) => item.product.id === product.id);
       if (existingItem) {
         return prev.map((item) =>
           item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1, totalPrice: (item.quantity + 1) * item.unitPrice }
-            : item,
-        )
+            ? {
+                ...item,
+                quantity: item.quantity + 1,
+                totalPrice: (item.quantity + 1) * item.unitPrice,
+              }
+            : item
+        );
       }
-      return [...prev, newItem]
-    })
-  }
+      return [...prev, newItem];
+    });
+  };
 
   const updateQuantity = (productId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      setCart((prev) => prev.filter((item) => item.product.id !== productId))
-      return
+      setCart((prev) => prev.filter((item) => item.product.id !== productId));
+      return;
     }
 
     setCart((prev) =>
       prev.map((item) =>
         item.product.id === productId
-          ? { ...item, quantity: newQuantity, totalPrice: newQuantity * item.unitPrice }
-          : item,
-      ),
-    )
-  }
+          ? {
+              ...item,
+              quantity: newQuantity,
+              totalPrice: newQuantity * item.unitPrice,
+            }
+          : item
+      )
+    );
+  };
 
   const removeFromCart = (productId: string) => {
-    setCart((prev) => prev.filter((item) => item.product.id !== productId))
-  }
+    setCart((prev) => prev.filter((item) => item.product.id !== productId));
+  };
 
-  const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0)
-  const salesTaxRate = 0.085 // 8.5%
-  const salesTaxAmount = subtotal * salesTaxRate
-  const totalAmount = subtotal + salesTaxAmount
-
+  const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
+  const salesTaxRate = 0.085; // 8.5%
+  const salesTaxAmount = subtotal * salesTaxRate;
+  const totalAmount = subtotal + salesTaxAmount;
+  
+  const router = useRouter();
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/");
+  };
   const handleInputChange = (field: string, value: string) => {
-    setOrderForm((prev) => ({ ...prev, [field]: value }))
-  }
+    setOrderForm((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmitOrder = () => {
-    console.log("Submitting order:", { orderForm, cart, totalAmount })
+    console.log("Submitting order:", { orderForm, cart, totalAmount });
     // Here you would submit to your backend
-    alert("Order submitted successfully!")
-  }
+    alert("Order submitted successfully!");
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="bg-[#14224c] px-4 py-2 rounded flex items-center">
-              <img src="/light-source-logo-white.png" alt="Light Source" className="h-8 w-auto" />
-            </div>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Bell className="w-5 h-5 text-gray-600" />
-            <div className="flex items-center space-x-2">
-              <div className="text-right">
-                <div className="text-gray-700 font-medium">Paramount</div>
-                <div className="text-xs text-gray-500">SUPERCUSTOMER</div>
-              </div>
-              <ChevronDown className="w-4 h-4 text-gray-600" />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200 px-6">
-        <div className="flex space-x-8">
-          <Link href="/orders" className="py-4 text-white bg-blue-900 px-4 rounded-t-lg flex items-center space-x-2">
-            <span>📦</span>
-            <span>Orders</span>
-          </Link>
-          <Link href="/" className="py-4 text-gray-600 hover:text-gray-900 flex items-center space-x-2">
-            <span>📋</span>
-            <span>Products</span>
-          </Link>
-          <button className="py-4 text-gray-600 hover:text-gray-900 flex items-center space-x-2">
-            <span>🏢</span>
-            <span>Offices</span>
-          </button>
-        </div>
-      </nav>
+      <Header
+        userRole={userRole}
+        userName={userRole === "Owner" ? "RANDY" : "Paramount"}
+        onLogout={handleLogout}
+      />
+      <Nav userRole={userRole} />
 
       {/* Main Content */}
       <main className="p-6">
@@ -149,7 +150,9 @@ export default function NewOrderPage() {
             {/* Order Form */}
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Order Form</h2>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Order Form
+                </h2>
                 <div className="text-right">
                   <div className="text-sm text-gray-600">ORDER DATE</div>
                   <div className="font-medium">June 22, 2025</div>
@@ -165,7 +168,9 @@ export default function NewOrderPage() {
                       id="po-number"
                       placeholder="enter PO number or order number"
                       value={orderForm.purchaseOrderNumber}
-                      onChange={(e) => handleInputChange("purchaseOrderNumber", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("purchaseOrderNumber", e.target.value)
+                      }
                     />
                   </div>
                   <div>
@@ -175,7 +180,9 @@ export default function NewOrderPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="randy@light-source.com">randy@light-source.com</SelectItem>
+                        <SelectItem value="randy@light-source.com">
+                          randy@light-source.com
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -186,18 +193,27 @@ export default function NewOrderPage() {
                     <Input
                       placeholder="enter contact Name"
                       value={orderForm.contactName}
-                      onChange={(e) => handleInputChange("contactName", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("contactName", e.target.value)
+                      }
                     />
                   </div>
                   <div>
                     <Label>BUILDING</Label>
-                    <Select value={orderForm.building} onValueChange={(value) => handleInputChange("building", value)}>
+                    <Select
+                      value={orderForm.building}
+                      onValueChange={(value) =>
+                        handleInputChange("building", value)
+                      }
+                    >
                       <SelectTrigger className="bg-gray-800 text-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="50 Beale St">50 Beale St</SelectItem>
-                        <SelectItem value="One Market Plaza">One Market Plaza</SelectItem>
+                        <SelectItem value="One Market Plaza">
+                          One Market Plaza
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -208,12 +224,19 @@ export default function NewOrderPage() {
                     <Input
                       placeholder="enter email"
                       value={orderForm.contactEmail}
-                      onChange={(e) => handleInputChange("contactEmail", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("contactEmail", e.target.value)
+                      }
                     />
                   </div>
                   <div>
                     <Label>TENANT</Label>
-                    <Select value={orderForm.tenant} onValueChange={(value) => handleInputChange("tenant", value)}>
+                    <Select
+                      value={orderForm.tenant}
+                      onValueChange={(value) =>
+                        handleInputChange("tenant", value)
+                      }
+                    >
                       <SelectTrigger className="bg-gray-800 text-white">
                         <SelectValue />
                       </SelectTrigger>
@@ -231,20 +254,29 @@ export default function NewOrderPage() {
                     <Label>SHIPPING</Label>
                     <Select
                       value={orderForm.shippingType}
-                      onValueChange={(value) => handleInputChange("shippingType", value)}
+                      onValueChange={(value) =>
+                        handleInputChange("shippingType", value)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Ground Shipment (3-5 days)">Ground Shipment (3-5 days)</SelectItem>
+                        <SelectItem value="Ground Shipment (3-5 days)">
+                          Ground Shipment (3-5 days)
+                        </SelectItem>
                         <SelectItem value="Express">Express</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
                     <Label>BILLING</Label>
-                    <Select value={orderForm.billing} onValueChange={(value) => handleInputChange("billing", value)}>
+                    <Select
+                      value={orderForm.billing}
+                      onValueChange={(value) =>
+                        handleInputChange("billing", value)
+                      }
+                    >
                       <SelectTrigger className="bg-gray-800 text-white">
                         <SelectValue />
                       </SelectTrigger>
@@ -264,14 +296,18 @@ export default function NewOrderPage() {
                       <Input
                         placeholder="address 1"
                         value={orderForm.address1}
-                        onChange={(e) => handleInputChange("address1", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("address1", e.target.value)
+                        }
                       />
                     </div>
                     <div>
                       <Label>SALES TAX</Label>
                       <Select
                         value={orderForm.salesTax}
-                        onValueChange={(value) => handleInputChange("salesTax", value)}
+                        onValueChange={(value) =>
+                          handleInputChange("salesTax", value)
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -290,7 +326,9 @@ export default function NewOrderPage() {
                       <Input
                         placeholder="address 2"
                         value={orderForm.address2}
-                        onChange={(e) => handleInputChange("address2", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("address2", e.target.value)
+                        }
                       />
                     </div>
                     <div>
@@ -298,7 +336,9 @@ export default function NewOrderPage() {
                       <Input
                         placeholder="phone"
                         value={orderForm.phone}
-                        onChange={(e) => handleInputChange("phone", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("phone", e.target.value)
+                        }
                       />
                     </div>
                   </div>
@@ -309,7 +349,9 @@ export default function NewOrderPage() {
                       <Input
                         placeholder="City"
                         value={orderForm.city}
-                        onChange={(e) => handleInputChange("city", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("city", e.target.value)
+                        }
                       />
                     </div>
                     <div>
@@ -317,7 +359,9 @@ export default function NewOrderPage() {
                       <Input
                         placeholder="fax"
                         value={orderForm.fax}
-                        onChange={(e) => handleInputChange("fax", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("fax", e.target.value)
+                        }
                       />
                     </div>
                   </div>
@@ -325,7 +369,12 @@ export default function NewOrderPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label>STATE</Label>
-                      <Select value={orderForm.state} onValueChange={(value) => handleInputChange("state", value)}>
+                      <Select
+                        value={orderForm.state}
+                        onValueChange={(value) =>
+                          handleInputChange("state", value)
+                        }
+                      >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -340,7 +389,9 @@ export default function NewOrderPage() {
                       <Input
                         placeholder="enter #"
                         value={orderForm.geConfirmation}
-                        onChange={(e) => handleInputChange("geConfirmation", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("geConfirmation", e.target.value)
+                        }
                       />
                     </div>
                   </div>
@@ -351,7 +402,9 @@ export default function NewOrderPage() {
                       <Input
                         placeholder="Postal Code"
                         value={orderForm.zip}
-                        onChange={(e) => handleInputChange("zip", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("zip", e.target.value)
+                        }
                       />
                     </div>
                     <div></div>
@@ -364,7 +417,9 @@ export default function NewOrderPage() {
                     <Label>SPECIAL SHIPPING INSTRUCTIONS:</Label>
                     <Textarea
                       value={orderForm.specialInstructions}
-                      onChange={(e) => handleInputChange("specialInstructions", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("specialInstructions", e.target.value)
+                      }
                       className="min-h-[60px]"
                     />
                   </div>
@@ -373,7 +428,9 @@ export default function NewOrderPage() {
                     <Label>COMMENTS:</Label>
                     <Textarea
                       value={orderForm.comments}
-                      onChange={(e) => handleInputChange("comments", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("comments", e.target.value)
+                      }
                       className="min-h-[60px]"
                     />
                   </div>
@@ -382,7 +439,9 @@ export default function NewOrderPage() {
                     <Label>SHIPPING DETAILS</Label>
                     <Textarea
                       value={orderForm.shippingDetails}
-                      onChange={(e) => handleInputChange("shippingDetails", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("shippingDetails", e.target.value)
+                      }
                       className="min-h-[60px]"
                     />
                   </div>
@@ -394,15 +453,26 @@ export default function NewOrderPage() {
             <div className="space-y-6">
               {/* Available Products */}
               <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Products</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Available Products
+                </h3>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {availableProducts.map((product) => (
-                    <div key={product.id} className="flex items-center justify-between p-2 border rounded">
+                    <div
+                      key={product.id}
+                      className="flex items-center justify-between p-2 border rounded"
+                    >
                       <div className="flex-1">
-                        <div className="text-sm font-medium">{product.item_number}</div>
-                        <div className="text-xs text-gray-600">{product.name}</div>
+                        <div className="text-sm font-medium">
+                          {product.item_number}
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          {product.name}
+                        </div>
                         <div className="text-xs text-green-600">
-                          ${product.assignments[0]?.client_unit_price || product.base_unit_price}
+                          $
+                          {product.assignments[0]?.client_unit_price ||
+                            product.base_unit_price}
                         </div>
                       </div>
                       <Button size="sm" onClick={() => addToCart(product)}>
@@ -415,10 +485,14 @@ export default function NewOrderPage() {
 
               {/* Shopping Cart */}
               <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Shopping Cart Contains:</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Your Shopping Cart Contains:
+                </h3>
 
                 {cart.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">Your cart is empty</div>
+                  <div className="text-center py-8 text-gray-500">
+                    Your cart is empty
+                  </div>
                 ) : (
                   <>
                     {/* Cart Header */}
@@ -433,27 +507,48 @@ export default function NewOrderPage() {
                     {/* Cart Items */}
                     <div className="border border-t-0 rounded-b">
                       {cart.map((item) => (
-                        <div key={item.product.id} className="p-3 border-b last:border-b-0">
+                        <div
+                          key={item.product.id}
+                          className="p-3 border-b last:border-b-0"
+                        >
                           <div className="grid grid-cols-6 gap-2 items-center text-sm">
-                            <div className="font-medium">{item.product.item_number}</div>
+                            <div className="font-medium">
+                              {item.product.item_number}
+                            </div>
                             <div className="col-span-2">
-                              <div className="font-medium">{item.product.manufacturer}</div>
-                              <div className="text-xs text-gray-600 line-clamp-2">{item.product.description}</div>
+                              <div className="font-medium">
+                                {item.product.manufacturer}
+                              </div>
+                              <div className="text-xs text-gray-600 line-clamp-2">
+                                {item.product.description}
+                              </div>
                             </div>
                             <div>${item.unitPrice.toFixed(2)}</div>
                             <div className="flex items-center space-x-2">
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                                onClick={() =>
+                                  updateQuantity(
+                                    item.product.id,
+                                    item.quantity - 1
+                                  )
+                                }
                               >
                                 <Minus className="w-3 h-3" />
                               </Button>
-                              <span className="w-8 text-center">{item.quantity}</span>
+                              <span className="w-8 text-center">
+                                {item.quantity}
+                              </span>
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                                onClick={() =>
+                                  updateQuantity(
+                                    item.product.id,
+                                    item.quantity + 1
+                                  )
+                                }
                               >
                                 <Plus className="w-3 h-3" />
                               </Button>
@@ -491,7 +586,8 @@ export default function NewOrderPage() {
                     </div>
 
                     <div className="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
-                      <strong>Note:</strong> Additional fee for shipping charges will apply (fee to be determined).
+                      <strong>Note:</strong> Additional fee for shipping charges
+                      will apply (fee to be determined).
                     </div>
 
                     <Button
@@ -509,5 +605,5 @@ export default function NewOrderPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }
