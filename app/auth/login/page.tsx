@@ -33,13 +33,7 @@ export default function LoginPage() {
 
       if (user) {
         setCurrentUser(user)
-
-        // Redirect based on role
-        if (user.role === "owner") {
           router.push("/orders")
-        } else {
-          router.push("/orders")
-        }
       } else {
         setError("Invalid email or password. Try the demo credentials below.")
       }
