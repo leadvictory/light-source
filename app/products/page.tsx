@@ -1,25 +1,26 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ChevronDown, Bell, Search, Plus, Edit, ChevronLeft, ChevronRight, Package, ShoppingCart, Users, Building2 } from "lucide-react"
+import { Search, Plus, Edit, ChevronLeft, ChevronRight, Package, ShoppingCart, Users, Building2 } from "lucide-react"
+import Header from "@/components/header"
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  supabase,
   type Product,
   type ProductAssignment,
   type Category,
   type Subcategory,
   mockProducts,
   mockCategories,
+  supabase,
 } from "@/lib/supabase"
 import { ProductAssignmentModal } from "@/components/product-assignment-modal"
 import { ProductEditModal } from "@/components/product-edit-modal"
 import Link from "next/link"
-import DatabaseSetup from "@/components/database-setup"
 
 const ITEMS_PER_PAGE = 20
 
@@ -38,6 +39,12 @@ export default function ProductsPage() {
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
   const [subcategoryFilter, setSubcategoryFilter] = useState("all")
   const [userRole] = useState<"OWNER" | "SUPERCUSTOMER" | "CUSTOMER">("OWNER") // This would come from auth context
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/auth/login');
+  };
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1)
@@ -305,27 +312,11 @@ export default function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-[#14224c] border-b border-[#14224c] px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="flex items-center">
-              <img src="/light-source-logo-white.png" alt="Light Source" className="h-8 w-auto" />
-            </div>
-          </div>
-          <div className="flex items-center space-x-4">
-            {!useSupabase && <div className="text-xs text-orange-200 bg-orange-800 px-2 py-1 rounded">Demo Mode</div>}
-            <Bell className="w-5 h-5 text-white" />
-            <div className="flex items-center space-x-2">
-              <div className="text-right">
-                <div className="text-white font-medium">RANDY</div>
-                <div className="text-xs text-gray-300">OWNER</div>
-              </div>
-              <ChevronDown className="w-4 h-4 text-white" />
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header
+        userRole={userRole}
+        userName={userRole === "OWNER" ? "RANDY" : "Paramount"}
+        onLogout={handleLogout}
+      />
 
       {/* Navigation */}
       <nav className="bg-white border-b border-gray-200 px-6">
