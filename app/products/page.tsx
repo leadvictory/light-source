@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Search, Plus, Edit, ChevronLeft, ChevronRight, Package, ShoppingCart, Users, Building2 } from "lucide-react"
+import { ChevronDown, Bell, Search, Plus, Edit, ChevronLeft, ChevronRight, Package, ShoppingCart, Users, Building2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -306,22 +306,26 @@ export default function ProductsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+      <header className="bg-[#14224c] border-b border-[#14224c] px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
             <div className="flex items-center">
-              <img src="/light-source-logo.png" alt="Light Source" className="h-8 w-auto mr-3" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Light Source Products</h1>
-                <p className="text-sm text-gray-500">Randy's Dashboard</p>
-              </div>
+              <img src="/light-source-logo-white.png" alt="Light Source" className="h-8 w-auto" />
             </div>
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-              Owner Access
-            </Badge>
+          </div>
+          <div className="flex items-center space-x-4">
+            {!useSupabase && <div className="text-xs text-orange-200 bg-orange-800 px-2 py-1 rounded">Demo Mode</div>}
+            <Bell className="w-5 h-5 text-white" />
+            <div className="flex items-center space-x-2">
+              <div className="text-right">
+                <div className="text-white font-medium">RANDY</div>
+                <div className="text-xs text-gray-300">OWNER</div>
+              </div>
+              <ChevronDown className="w-4 h-4 text-white" />
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Navigation */}
       <nav className="bg-white border-b border-gray-200 px-6">
@@ -343,11 +347,6 @@ export default function ProductsPage() {
 
       {/* Dashboard */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Database Setup Section */}
-        <div className="mb-8">
-          <DatabaseSetup />
-        </div>
-
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>

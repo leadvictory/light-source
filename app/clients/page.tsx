@@ -167,7 +167,7 @@ export default function ClientsPage() {
             <span>📦</span>
             <span>Orders</span>
           </Link>
-          <Link href="/" className="py-4 text-gray-600 hover:text-gray-900 flex items-center space-x-2">
+          <Link href="/products" className="py-4 text-gray-600 hover:text-gray-900 flex items-center space-x-2">
             <span>📋</span>
             <span>Products</span>
           </Link>

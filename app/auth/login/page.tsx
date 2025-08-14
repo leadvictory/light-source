@@ -36,9 +36,9 @@ export default function LoginPage() {
 
         // Redirect based on role
         if (user.role === "owner") {
-          router.push("/admin")
+          router.push("/orders")
         } else {
-          router.push("/client")
+          router.push("/orders")
         }
       } else {
         setError("Invalid email or password. Try the demo credentials below.")
