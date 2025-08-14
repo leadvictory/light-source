@@ -3,7 +3,7 @@ import { supabase } from "./supabase"
 export interface User {
   id: string
   email: string
-  role: "owner" | "client"
+  role: "Owner" | "SuperClient" | "Client" | "Tenant"
   client_id?: string
   first_name?: string
   last_name?: string
@@ -54,7 +54,7 @@ export async function signIn(email: string, password: string): Promise<User | nu
     return {
       id: userData.id,
       email: userData.email,
-      role: userData.role as "owner" | "client",
+      role: userData.role as "Owner" | "SuperClient" | "Client" | "Tenant",
       client_id: userData.client_id,
       first_name: userData.first_name,
       last_name: userData.last_name,
