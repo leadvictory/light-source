@@ -17,6 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { supabase, type Order } from "@/lib/supabase";
 import Link from "next/link";
 import Nav from "@/components/navbar";
+import OrderCard, { type OrderView } from "@/components/orders/OrderCard";
+import CompanyGroup from "@/components/orders/CompanyGroup";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<
@@ -86,7 +88,6 @@ export default function OrdersPage() {
             "Unknown",
         })) ?? [];
 
-      // optional extra filtering on user/company names (client-side) to match your old behavior
       const final = searchTerm.trim()
         ? transformed.filter(
             (o) =>
@@ -129,6 +130,10 @@ export default function OrdersPage() {
     });
   };
 
+  const onDuplicate = (order: OrderView) => {
+    console.log("Duplicate order:", order.order_number);
+    // TODO: implement duplication flow
+  };
   const groupOrdersByCompany = (
     data: (Order & { company_name: string; user_name: string })[]
   ) =>
@@ -201,122 +206,19 @@ export default function OrdersPage() {
           <div className="p-4">
             {grouped
               ? Object.entries(grouped).map(([companyName, companyOrders]) => (
-                  <div key={companyName}>
-                    <div className="px-6 py-4 bg-gray-100">
-                      <h2 className="text-lg font-bold text-gray-900">
-                        {companyName}
-                      </h2>
-                    </div>
-                    {companyOrders.map((order) => (
-                      <Link
-                        href={`/orders/${order.id}`}
-                        key={order.id}
-                        className="block px-6 py-4 hover:bg-gray-50 transition-colors border border-gray-200 rounded-lg mb-2 mx-4 cursor-pointer hover:shadow-md"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-6">
-                            <div className="text-sm text-gray-600 w-16">
-                              {formatDate(order.created_at)}
-                            </div>
-                            <div className="flex-1">
-                              <div className="text-lg font-semibold text-gray-900 mb-1">
-                                {order.order_number}
-                              </div>
-                              <div className="text-sm text-gray-600">
-                                {order.building_id
-                                  ? "50 Beale Street"
-                                  : "7thFloor- One Market Plaza"}
-                              </div>
-                              <div className="text-sm text-gray-600">
-                                {companyName}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-6">
-                            <div className="text-right">
-                              <div className="text-sm text-gray-600">
-                                Ordered by {order.user_name}
-                              </div>
-                              <div className="text-sm text-blue-600 underline">
-                                {order.user_name}@paramountgroup.com
-                              </div>
-                            </div>
-                            <div className="flex flex-col items-center space-y-2">
-                              {getStatusBadge(order.status)}
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-blue-600 border-blue-600 bg-blue-50"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                console.log(
-                                  "Duplicate order:",
-                                  order.order_number
-                                );
-                              }}
-                            >
-                              Duplicate order
-                            </Button>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
+                  <CompanyGroup
+                    key={companyName}
+                    companyName={companyName}
+                    orders={companyOrders as OrderView[]}
+                    onDuplicate={onDuplicate}
+                  />
                 ))
               : orders.map((order) => (
-                  <Link
-                    href={`/orders/${order.id}`}
+                  <OrderCard
                     key={order.id}
-                    className="block px-6 py-4 hover:bg-gray-50 transition-colors border border-gray-200 rounded-lg mb-2 mx-4 cursor-pointer hover:shadow-md"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-6">
-                        <div className="text-sm text-gray-600 w-16">
-                          {formatDate(order.created_at)}
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-lg font-semibold text-gray-900 mb-1">
-                            {order.order_number}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {order.building_id
-                              ? "50 Beale Street"
-                              : "7thFloor- One Market Plaza"}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {order.company_name}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-6">
-                        <div className="text-right">
-                          <div className="text-sm text-gray-600">
-                            Ordered by {order.user_name}
-                          </div>
-                          <div className="text-sm text-blue-600 underline">
-                            {order.user_name}@paramountgroup.com
-                          </div>
-                        </div>
-                        <div className="flex flex-col items-center space-y-2">
-                          {getStatusBadge(order.status)}
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-blue-600 border-blue-600 bg-blue-50"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            console.log("Duplicate order:", order.order_number);
-                          }}
-                        >
-                          Duplicate order
-                        </Button>
-                      </div>
-                    </div>
-                  </Link>
+                    order={order as OrderView}
+                    onDuplicate={onDuplicate}
+                  />
                 ))}
           </div>
         </div>
