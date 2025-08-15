@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Search, Plus } from "lucide-react";
-import Header from "@/components/header";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { supabase, type Order } from "@/lib/supabase";
-import Link from "next/link";
+import Header from "@/components/header";
 import Nav from "@/components/navbar";
 import OrderCard, { type OrderView } from "@/components/orders/OrderCard";
 import CompanyGroup from "@/components/orders/CompanyGroup";
